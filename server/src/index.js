@@ -1,16 +1,20 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { User } from './models/User.js';
+import { Item } from './models/Item.js';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
-// In-memory data
-let users = [{ id: 1, username: 'test', password: 'password', name: 'Test User' }];
-let sessions = new Map(); // token -> userId
-let itemsByUser = new Map(); // userId -> items array
+// In-memory session tokens (keep simple for now; tokens map to Mongo user _id)
+let sessions = new Map(); // token -> userId(ObjectId string)
 
 const genToken = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
@@ -27,37 +31,76 @@ app.get('/health', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body || {};
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-  const token = genToken();
-  sessions.set(token, user.id);
-  if (!itemsByUser.has(user.id)) itemsByUser.set(user.id, []);
-  res.json({ token, user: { id: user.id, name: user.name, username: user.username } });
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    const user = await User.findOne({ username, password }).exec();
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = genToken();
+    sessions.set(token, user._id.toString());
+    res.json({ token, user: user.toJSON() });
+  } catch (err) {
+    console.error('Login error', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
-app.get('/api/items', auth, (req, res) => {
-  res.json({ items: itemsByUser.get(req.userId) || [] });
+app.get('/api/items', auth, async (req, res) => {
+  try {
+    const items = await Item.find({ userId: req.userId }).sort({ createdAt: 1 }).exec();
+    res.json({ items: items.map(i => i.toJSON()) });
+  } catch (err) {
+    console.error('List items error', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
-app.post('/api/items', auth, (req, res) => {
-  const { text } = req.body || {};
-  if (!text || !text.trim()) return res.status(400).json({ error: 'Text required' });
-  const list = itemsByUser.get(req.userId) || [];
-  const item = { id: Date.now().toString(), text: text.trim() };
-  list.push(item);
-  itemsByUser.set(req.userId, list);
-  res.status(201).json({ item });
+app.post('/api/items', auth, async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text || !text.trim()) return res.status(400).json({ error: 'Text required' });
+    const created = await Item.create({ userId: req.userId, text: text.trim() });
+    res.status(201).json({ item: created.toJSON() });
+  } catch (err) {
+    console.error('Create item error', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
-app.delete('/api/items/:id', auth, (req, res) => {
-  const list = itemsByUser.get(req.userId) || [];
-  const next = list.filter(i => i.id !== req.params.id);
-  itemsByUser.set(req.userId, next);
-  res.json({ ok: true });
+app.delete('/api/items/:id', auth, async (req, res) => {
+  try {
+    await Item.deleteOne({ _id: req.params.id, userId: req.userId }).exec();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete item error', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/qa_eval';
+    await mongoose.connect(MONGODB_URI, { dbName: process.env.MONGODB_DB || undefined });
+    console.log('Connected to MongoDB');
+
+    // Seed default user if not present
+    const username = process.env.SEED_USERNAME || 'test';
+    const password = process.env.SEED_PASSWORD || 'password';
+    const name = process.env.SEED_NAME || 'Test User';
+    const existing = await User.findOne({ username }).exec();
+    if (!existing) {
+      await User.create({ username, password, name });
+      console.log('Seeded default user:', username);
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Server listening on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server', err);
+    process.exit(1);
+  }
+}
+
+start();
