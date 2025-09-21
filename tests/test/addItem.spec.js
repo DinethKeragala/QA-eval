@@ -1,6 +1,5 @@
 import { strict as assert } from 'assert';
-import { randomBytes } from 'crypto';
-import { buildDriver, waitForTestId } from './helpers.js';
+import { buildDriver, waitForTestId, loginDefault, randomHex, BASE_URL } from './helpers.js';
 
 describe('UI: Add Item flow', function() {
   this.timeout(60000);
@@ -15,21 +14,10 @@ describe('UI: Add Item flow', function() {
   });
 
   it('adds a new item and sees it in the list', async () => {
-    await driver.get('http://localhost:5173/');
-    const username = await waitForTestId(driver, 'username');
-    const password = await waitForTestId(driver, 'password');
-    const btn = await waitForTestId(driver, 'login-btn');
-    await username.clear();
-    await username.sendKeys('test');
-    await password.clear();
-    await password.sendKeys('password');
-    await btn.click();
-
-    await waitForTestId(driver, 'items-list');
+    await loginDefault(driver, { baseUrl: BASE_URL });
     const input = await waitForTestId(driver, 'item-input');
     const addBtn = await waitForTestId(driver, 'add-btn');
-  const rand = randomBytes(4).toString('hex'); // cryptographically secure random suffix
-  const text = `Item ${rand}`;
+    const text = `Item ${randomHex(4)}`;
     await input.clear();
     await input.sendKeys(text);
     await addBtn.click();
