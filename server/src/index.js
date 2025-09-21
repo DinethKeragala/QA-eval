@@ -26,14 +26,7 @@ app.use(express.json());
 let sessions = new Map(); // token -> userId(ObjectId string)
 
 // ---- Token Generation ----
-
-// ❌ Insecure: predictable random tokens (UNCOMMENT THIS for insecure demo)
-/*
-const genToken = () =>
-  Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-*/
-
-// ✅ Secure: cryptographically strong random tokens (UNCOMMENT THIS for secure demo)
+// ✅ Secure: cryptographically strong random tokens
 const genToken = () => crypto.randomBytes(32).toString('hex');
 
 // Middleware to auth
@@ -88,16 +81,7 @@ app.post('/api/auth/register', async (req, res) => {
     const exists = await User.findOne({ username: { $eq: usernameStr } }).exec();
     if (exists) return res.status(409).json({ error: 'Username already taken' });
 
-    // ❌ Insecure: store plain-text password (UNCOMMENT THIS for insecure demo)
-    /*
-    const user = await User.create({
-      name: name.trim(),
-      username: username.trim(),
-      password: password.trim(),
-    });
-    */
-
-    // ✅ Secure: hash password before storing (UNCOMMENT THIS for secure demo)
+    // ✅ Secure: hash password before storing
     const hashed = await bcrypt.hash(passwordStr, 12);
     const user = await User.create({
       name: nameStr,
@@ -125,13 +109,7 @@ app.post('/api/auth/login', async (req, res) => {
     // FIX: Require both fields to prevent empty-password logins
     if (!usernameStr || !passwordStr) return res.status(400).json({ error: 'Username and password required' });
 
-    // ❌ Insecure: vulnerable to NoSQL injection + plain-text password (UNCOMMENT THIS for insecure demo)
-    /*
-    const user = await User.findOne({ username, password }).exec();
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    */
-
-    // ✅ Secure: find by username, verify with bcrypt (UNCOMMENT THIS for secure demo)
+    // ✅ Secure: find by username, verify with bcrypt
   // Use $eq with validated string to avoid interpreting objects/operators from user input
   const user = await User.findOne({ username: { $eq: usernameStr } }).exec();
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -208,19 +186,7 @@ async function start() {
     await mongoose.connect(mongoUri, { dbName: process.env.MONGODB_DB || undefined });
     console.log('Connected to MongoDB');
 
-    // ❌ Insecure: seed with plain-text password (UNCOMMENT THIS for insecure demo)
-    /*
-    const username = process.env.SEED_USERNAME || 'test';
-    const password = process.env.SEED_PASSWORD || 'password';
-    const name = process.env.SEED_NAME || 'Test User';
-    const existing = await User.findOne({ username }).exec();
-    if (!existing) {
-      await User.create({ username, password, name });
-      console.log('Seeded default user (plain-text password):', username);
-    }
-    */
-
-    // ✅ Secure: seed with hashed password (UNCOMMENT THIS for secure demo)
+    // ✅ Secure: seed with hashed password
     const username = process.env.SEED_USERNAME || 'test';
     const password = process.env.SEED_PASSWORD || 'password';
     const name = process.env.SEED_NAME || 'Test User';
