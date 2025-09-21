@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import { User } from './models/User.js';
 import { Item } from './models/Item.js';
 
@@ -80,8 +81,16 @@ app.delete('/api/items/:id', auth, async (req, res) => {
 
 async function start() {
   try {
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/qa_eval';
-    await mongoose.connect(MONGODB_URI, { dbName: process.env.MONGODB_DB || undefined });
+    let mongoUri = process.env.MONGODB_URI;
+    let mem;
+    if (!mongoUri && (process.env.CI === 'true' || process.env.USE_IN_MEMORY_DB === 'true')) {
+      // Spin up in-memory MongoDB for CI or when explicitly requested
+      mem = await MongoMemoryServer.create();
+      mongoUri = mem.getUri();
+      console.log('Started in-memory MongoDB');
+    }
+    mongoUri = mongoUri || 'mongodb://127.0.0.1:27017/qa_eval';
+    await mongoose.connect(mongoUri, { dbName: process.env.MONGODB_DB || undefined });
     console.log('Connected to MongoDB');
 
     // Seed default user if not present
@@ -94,9 +103,21 @@ async function start() {
       console.log('Seeded default user:', username);
     }
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);
     });
+
+    // Graceful shutdown for in-memory server
+    const shutdown = async () => {
+      try {
+        await mongoose.disconnect();
+        if (mem) await mem.stop();
+      } finally {
+        process.exit(0);
+      }
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
   } catch (err) {
     console.error('Failed to start server', err);
     process.exit(1);
