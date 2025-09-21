@@ -16,6 +16,9 @@ const PORT = process.env.PORT || 4000;
 // Track when this server process started
 const SERVER_START_TIME = new Date();
 
+// Enforce strict query parsing to avoid interpreting unexpected operators from user input
+mongoose.set('strictQuery', true);
+
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
@@ -74,10 +77,15 @@ app.get('/uptime', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, username, password } = req.body || {};
-    if (!name?.trim() || !username?.trim() || !password?.trim()) {
+    // Validate types explicitly to prevent NoSQL operator injection
+    const nameStr = typeof name === 'string' ? name.trim() : '';
+    const usernameStr = typeof username === 'string' ? username.trim() : '';
+    const passwordStr = typeof password === 'string' ? password.trim() : '';
+    if (!nameStr || !usernameStr || !passwordStr) {
       return res.status(400).json({ error: 'Name, username and password are required' });
     }
-    const exists = await User.findOne({ username }).exec();
+    // Use $eq with validated string to avoid interpreting objects/operators from user input
+    const exists = await User.findOne({ username: { $eq: usernameStr } }).exec();
     if (exists) return res.status(409).json({ error: 'Username already taken' });
 
     // ❌ Insecure: store plain-text password (UNCOMMENT THIS for insecure demo)
@@ -90,10 +98,10 @@ app.post('/api/auth/register', async (req, res) => {
     */
 
     // ✅ Secure: hash password before storing (UNCOMMENT THIS for secure demo)
-    const hashed = await bcrypt.hash(password.trim(), 12);
+    const hashed = await bcrypt.hash(passwordStr, 12);
     const user = await User.create({
-      name: name.trim(),
-      username: username.trim(),
+      name: nameStr,
+      username: usernameStr,
       password: hashed,
     });
 
@@ -111,8 +119,11 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
+    // Validate types explicitly to prevent NoSQL operator injection
+    const usernameStr = typeof username === 'string' ? username.trim() : '';
+    const passwordStr = typeof password === 'string' ? password.trim() : '';
     // FIX: Require both fields to prevent empty-password logins
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    if (!usernameStr || !passwordStr) return res.status(400).json({ error: 'Username and password required' });
 
     // ❌ Insecure: vulnerable to NoSQL injection + plain-text password (UNCOMMENT THIS for insecure demo)
     /*
@@ -121,11 +132,12 @@ app.post('/api/auth/login', async (req, res) => {
     */
 
     // ✅ Secure: find by username, verify with bcrypt (UNCOMMENT THIS for secure demo)
-    const user = await User.findOne({ username }).exec();
+  // Use $eq with validated string to avoid interpreting objects/operators from user input
+  const user = await User.findOne({ username: { $eq: usernameStr } }).exec();
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     // FIX: Always verify provided password using bcrypt
-    const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = await bcrypt.compare(passwordStr, user.password);
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = genToken();
