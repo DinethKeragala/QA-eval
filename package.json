@@ -1,0 +1,24 @@
+{
+  "name": "qa-eval",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "server",
+    "client",
+    "tests"
+  ],
+  "scripts": {
+    "start:server": "npm --workspace server run start",
+    "start:client": "npm --workspace client run dev",
+    "start": "concurrently -k -n server,client -c blue,green \"npm run start:server\" \"npm run start:client\"",
+    "build": "npm -w client run build",
+    "test": "start-server-and-test start http://localhost:5173 \"npm -w tests test\"",
+    "api:test:local": "newman run ./postman/express-task-api-tests.postman_collection.json",
+    "api:test": "start-server-and-test start:server http://localhost:4000/health \"npm run api:test:local\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "start-server-and-test": "^2.0.2",
+    "newman": "^6.2.1"
+  }
+}

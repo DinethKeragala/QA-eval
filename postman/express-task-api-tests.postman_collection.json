@@ -1,0 +1,187 @@
+{
+  "info": {
+    "name": "Express Task API Tests",
+    "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+    "description": "Automated tests for login, item CRUD, and error handling",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login - Success",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"test\",\n  \"password\": \"password\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/auth/login", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "auth", "login"] }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has token and user\", function () {",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('token');",
+              "    pm.expect(jsonData).to.have.property('user');",
+              "    pm.environment.set('authToken', jsonData.token);",
+              "    pm.environment.set('userId', jsonData.user.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Items - Unauthorized",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "http://localhost:4000/api/items", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "items"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Unauthorized status 401\", function () {",
+              "    pm.response.to.have.status(401);",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('error', 'Unauthorized');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Items - Authorized",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/items", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "items"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Items array exists\", function () {",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('items');",
+              "    pm.expect(jsonData.items).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Item - Success",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"My first item\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/items", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "items"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has item\", function () {",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('item');",
+              "    pm.environment.set('itemId', jsonData.item.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Item - Error Empty Text",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/items", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "items"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Error message text required\", function () {",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('error', 'Text required');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE Item - Success",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/items/{{itemId}}", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "items", "{{itemId}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response ok true\", function () {",
+              "    let jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('ok', true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "authToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "itemId", "value": "" }
+  ]
+}
