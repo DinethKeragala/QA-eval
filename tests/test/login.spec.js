@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import { buildDriver, waitForTestId, loginDefault, BASE_URL } from './helpers.js';
+import { buildDriver, loginDefault, BASE_URL } from './helpers.js';
 
 describe('UI: Login flow', function() {
   this.timeout(60000);
