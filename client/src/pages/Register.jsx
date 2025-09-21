@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { register as registerApi } from '../api.js';
 
 export default function Register({ onRegister }) {
@@ -40,3 +41,7 @@ export default function Register({ onRegister }) {
     </div>
   );
 }
+
+Register.propTypes = {
+  onRegister: PropTypes.func,
+};
