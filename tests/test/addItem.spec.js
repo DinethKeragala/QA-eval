@@ -1,4 +1,5 @@
 import { strict as assert } from 'assert';
+import { randomBytes } from 'crypto';
 import { buildDriver, waitForTestId } from './helpers.js';
 
 describe('UI: Add Item flow', function() {
@@ -27,8 +28,8 @@ describe('UI: Add Item flow', function() {
     await waitForTestId(driver, 'items-list');
     const input = await waitForTestId(driver, 'item-input');
     const addBtn = await waitForTestId(driver, 'add-btn');
-    const rand = Math.random().toString(36).slice(2, 8);
-    const text = `Item ${rand}`;
+  const rand = randomBytes(4).toString('hex'); // cryptographically secure random suffix
+  const text = `Item ${rand}`;
     await input.clear();
     await input.sendKeys(text);
     await addBtn.click();

@@ -19,6 +19,9 @@ const SERVER_START_TIME = new Date();
 // Enforce strict query parsing to avoid interpreting unexpected operators from user input
 mongoose.set('strictQuery', true);
 
+// Security: avoid disclosing framework/version via response headers
+app.disable('x-powered-by');
+
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
