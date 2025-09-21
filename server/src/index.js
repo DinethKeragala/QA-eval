@@ -174,7 +174,19 @@ app.post('/api/items', auth, async (req, res) => {
 
 app.delete('/api/items/:id', auth, async (req, res) => {
   try {
-    await Item.deleteOne({ _id: req.params.id, userId: req.userId }).exec();
+    const rawId = req.params.id;
+    // Validate id is a valid ObjectId string and sanitize userId
+    if (typeof rawId !== 'string' || !mongoose.Types.ObjectId.isValid(rawId)) {
+      return res.status(400).json({ error: 'Invalid item id' });
+    }
+    const itemId = new mongoose.Types.ObjectId(rawId);
+    const userIdStr = typeof req.userId === 'string' ? req.userId : String(req.userId || '');
+    if (!mongoose.Types.ObjectId.isValid(userIdStr)) {
+      return res.status(400).json({ error: 'Invalid user context' });
+    }
+    const userId = new mongoose.Types.ObjectId(userIdStr);
+
+    await Item.deleteOne({ _id: itemId, userId: { $eq: userId } }).exec();
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete item error', err);
