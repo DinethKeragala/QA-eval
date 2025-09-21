@@ -141,7 +141,7 @@ app.get('/api/items', auth, async (req, res) => {
 app.post('/api/items', auth, async (req, res) => {
   try {
     const { text } = req.body || {};
-    if (!text || !text.trim()) return res.status(400).json({ error: 'Text required' });
+    if (!text?.trim()) return res.status(400).json({ error: 'Text required' });
     const created = await Item.create({ userId: req.userId, text: text.trim() });
     res.status(201).json({ item: created.toJSON() });
   } catch (err) {
@@ -212,7 +212,7 @@ async function start() {
     // Declare here so shutdown can reference it
     let currentPeriod = null;
 
-    const server = app.listen(PORT, () => {
+    app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);
       // Create a runtime period only after successful bind to avoid duplicates on EADDRINUSE
       RuntimePeriod.create({ startTime: new Date() })
