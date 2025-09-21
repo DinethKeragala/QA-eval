@@ -30,27 +30,32 @@ export default function Dashboard({ token, onLogout }) {
     setText('');
   };
 
+  let content;
+  if (loading) {
+    content = (<div data-testid="loading">Loading…</div>);
+  } else if (error) {
+    content = (<div className="error">{error}</div>);
+  } else {
+    content = (
+      <>
+        <form onSubmit={add} className="row">
+          <input data-testid="item-input" placeholder="Add new item" value={text} onChange={e => setText(e.target.value)} />
+          <button data-testid="add-btn">Add</button>
+        </form>
+        <ul data-testid="items-list">
+          {items.map(i => (<li key={i.id} className="item" data-testid="item">{i.text}</li>))}
+        </ul>
+      </>
+    );
+  }
+
   return (
     <div className="container">
       <div className="row">
         <h2>Dashboard</h2>
         <button data-testid="logout" className="link" onClick={onLogout}>Logout</button>
       </div>
-      {loading ? (
-        <div data-testid="loading">Loading…</div>
-      ) : error ? (
-        <div className="error">{error}</div>
-      ) : (
-        <>
-          <form onSubmit={add} className="row">
-            <input data-testid="item-input" placeholder="Add new item" value={text} onChange={e => setText(e.target.value)} />
-            <button data-testid="add-btn">Add</button>
-          </form>
-          <ul data-testid="items-list">
-            {items.map(i => (<li key={i.id} className="item" data-testid="item">{i.text}</li>))}
-          </ul>
-        </>
-      )}
+      {content}
     </div>
   );
 }
