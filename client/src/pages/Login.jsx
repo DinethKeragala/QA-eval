@@ -27,10 +27,10 @@ export default function Login({ onLogin }) {
     <div className="container">
       <h1>MERN QA Eval</h1>
       <form onSubmit={submit} className="card">
-        <label>Username</label>
-        <input data-testid="username" value={username} onChange={e => setUsername(e.target.value)} />
-        <label>Password</label>
-        <input data-testid="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <label htmlFor="login-username">Username</label>
+        <input id="login-username" data-testid="username" value={username} onChange={e => setUsername(e.target.value)} />
+        <label htmlFor="login-password">Password</label>
+        <input id="login-password" data-testid="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         <button data-testid="login-btn" disabled={loading}>
           {loading ? 'Logging in…' : 'Login'}
         </button>

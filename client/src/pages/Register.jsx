@@ -26,12 +26,12 @@ export default function Register({ onRegister }) {
     <div className="container">
       <h1>Create account</h1>
       <form onSubmit={submit} className="card">
-        <label>Name</label>
-        <input data-testid="name" value={name} onChange={e => setName(e.target.value)} />
-        <label>Username</label>
-        <input data-testid="reg-username" value={username} onChange={e => setUsername(e.target.value)} />
-        <label>Password</label>
-        <input data-testid="reg-password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <label htmlFor="reg-name">Name</label>
+        <input id="reg-name" data-testid="name" value={name} onChange={e => setName(e.target.value)} />
+        <label htmlFor="reg-username">Username</label>
+        <input id="reg-username" data-testid="reg-username" value={username} onChange={e => setUsername(e.target.value)} />
+        <label htmlFor="reg-password">Password</label>
+        <input id="reg-password" data-testid="reg-password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         <button data-testid="register-btn" disabled={loading}>
           {loading ? 'Registering…' : 'Register'}
         </button>
