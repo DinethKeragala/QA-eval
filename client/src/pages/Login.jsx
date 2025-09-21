@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { login } from '../api.js';
 
 export default function Login({ onLogin }) {
@@ -35,6 +36,9 @@ export default function Login({ onLogin }) {
         {error && <div data-testid="login-error" className="error">{error}</div>}
       </form>
       <p>Default creds: test / password</p>
+      <p>
+        New here? <Link to="/register">Create an account</Link>
+      </p>
     </div>
   );
 }

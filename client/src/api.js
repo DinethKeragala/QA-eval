@@ -10,6 +10,19 @@ export async function login(username, password) {
   return res.json();
 }
 
+export async function register(name, username, password) {
+  const res = await fetch(`${API_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, username, password })
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || 'Registration failed');
+  }
+  return res.json();
+}
+
 export async function getItems(token) {
   const res = await fetch(`${API_URL}/api/items`, {
     headers: { 'Authorization': `Bearer ${token}` }

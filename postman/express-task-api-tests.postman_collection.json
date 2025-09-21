@@ -7,6 +7,39 @@
   },
   "item": [
     {
+      "name": "Register - Success (optional)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"New User\",\n  \"username\": \"newuser\",\n  \"password\": \"password\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/auth/register", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api", "auth", "register"] }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 or 409\", function () {",
+              "  pm.expect([201,409]).to.include(pm.response.code);",
+              "});",
+              "if (pm.response.code === 201) {",
+              "  let jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('token');",
+              "  pm.expect(jsonData).to.have.property('user');",
+              "}",
+              "// Do not set authToken here to avoid affecting later tests."
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "Login - Success",
       "request": {
         "method": "POST",

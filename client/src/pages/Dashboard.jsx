@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { getItems, addItem } from '../api.js';
 
 export default function Dashboard({ token, onLogout }) {
@@ -53,3 +54,8 @@ export default function Dashboard({ token, onLogout }) {
     </div>
   );
 }
+
+Dashboard.propTypes = {
+  token: PropTypes.string.isRequired,
+  onLogout: PropTypes.func.isRequired,
+};

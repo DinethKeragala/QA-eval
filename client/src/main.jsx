@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import './styles.css'
 
@@ -20,7 +21,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={token ? <Navigate to="/app" /> : <Login onLogin={handleLogin} />} />
+  <Route path="/" element={token ? <Navigate to="/app" /> : <Login onLogin={handleLogin} />} />
+  <Route path="/register" element={token ? <Navigate to="/app" /> : <Register onRegister={handleLogin} />} />
         <Route path="/app" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
