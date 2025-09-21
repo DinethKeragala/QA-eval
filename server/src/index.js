@@ -225,7 +225,11 @@ async function start() {
         // Close the runtime period with an endTime if it's still open
         if (currentPeriod && !currentPeriod.endTime) {
           currentPeriod.endTime = new Date();
-          try { await currentPeriod.save(); } catch (_) {}
+          try {
+            await currentPeriod.save();
+          } catch (err) {
+            console.error('Failed to save runtime period on shutdown', err);
+          }
         }
         await mongoose.disconnect();
         if (mem) await mem.stop();
