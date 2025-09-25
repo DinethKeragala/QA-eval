@@ -1,7 +1,6 @@
 {
   "name": "qa-eval-tests",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "test": "mocha --timeout 60000 \"test/**/*.spec.js\""
   },
