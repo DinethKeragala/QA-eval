@@ -21,14 +21,25 @@ async function waitForTestId(driver, id, timeout = 10000) {
 const BASE_URL = process.env.CLIENT_URL || 'http://localhost:5173/';
 
 async function waitForApi(healthUrl = 'http://localhost:4000/health', attempts = 20, delayMs = 500) {
+  let lastError;
+  let lastStatus;
   for (let i = 0; i < attempts; i++) {
     try {
       const res = await fetch(healthUrl, { method: 'GET' });
       if (res.ok) return true;
-    } catch (_) { /* ignore */ }
-    await new Promise(r => setTimeout(r, delayMs));
+      lastStatus = res.status;
+    } catch (err) {
+      lastError = err;
+    }
+    await new Promise((r) => setTimeout(r, delayMs));
   }
-  return false;
+  if (lastError) {
+    throw new Error(`API health check failed after ${attempts} attempts: ${lastError.message}`);
+  }
+  if (lastStatus) {
+    throw new Error(`API health check returned non-OK status ${lastStatus} after ${attempts} attempts`);
+  }
+  throw new Error(`API health check failed after ${attempts} attempts`);
 }
 
 // Removed resolveBaseUrl – we now assume BASE_URL is correct

@@ -18,8 +18,8 @@ describe('UI: Add Item flow', function() {
     const list = await loginDefault(driver, { baseUrl: BASE_URL });
     const loggedInUrl = await driver.getCurrentUrl();
     console.log('DEBUG current URL after login:', loggedInUrl);
-    const token = await driver.executeScript('return window.localStorage.getItem("token")');
-    console.log('DEBUG token length:', token && token.length);
+  const token = await driver.executeScript('return window.localStorage.getItem("token")');
+  console.log('DEBUG token length:', token?.length);
     // Capture initial count to provide a structural wait condition
     const initialItems = await driver.findElements(By.css('[data-testid="item"]'));
     const initialCount = initialItems.length;
