@@ -167,58 +167,55 @@ app.delete('/api/items/:id', auth, async (req, res) => {
   }
 });
 
-// ---- Startup + Seeding ----
-async function start() {
-  try {
-    let mongoUri = process.env.MONGODB_URI;
-    let mem;
-    if (!mongoUri && (process.env.CI === 'true' || process.env.USE_IN_MEMORY_DB === 'true')) {
-      mem = await MongoMemoryServer.create();
-      mongoUri = mem.getUri();
-      console.log('Started in-memory MongoDB');
-    }
-    mongoUri = mongoUri || 'mongodb://127.0.0.1:27017/qa_eval';
-    await mongoose.connect(mongoUri, { dbName: process.env.MONGODB_DB || undefined });
-    console.log('Connected to MongoDB');
-
-    // ✅ Secure: seed with hashed password
-    const username = process.env.SEED_USERNAME || 'test';
-    const password = process.env.SEED_PASSWORD || 'password';
-    const name = process.env.SEED_NAME || 'Test User';
-    const existing = await User.findOne({ username }).exec();
-    if (existing) {
-      const looksHashed =
-        typeof existing.password === 'string' && existing.password.startsWith('$2');
-      if (!looksHashed) {
-        const hashed = await bcrypt.hash(password, 12);
-        existing.password = hashed;
-        await existing.save();
-        console.log('Upgraded default user password to bcrypt hash');
-      }
-    } else {
-      const hashed = await bcrypt.hash(password, 12);
-      await User.create({ username, password: hashed, name });
-      console.log('Seeded default user (hashed password):', username);
-    }
-
-    app.listen(PORT, () => {
-      console.log(`Server listening on http://localhost:${PORT}`);
-    });
-
-    const shutdown = async () => {
-      try {
-        await mongoose.disconnect();
-        if (mem) await mem.stop(); // stop in-memory DB if used
-      } finally {
-        process.exit(0);
-      }
-    };
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
-  } catch (err) {
-    console.error('Failed to start server', err);
-    process.exit(1);
+// ---- Startup + Seeding (Top-level await) ----
+let mem;
+try {
+  let mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri && (process.env.CI === 'true' || process.env.USE_IN_MEMORY_DB === 'true')) {
+    mem = await MongoMemoryServer.create();
+    mongoUri = mem.getUri();
+    console.log('Started in-memory MongoDB');
   }
-}
+  mongoUri = mongoUri || 'mongodb://127.0.0.1:27017/qa_eval';
+  await mongoose.connect(mongoUri, { dbName: process.env.MONGODB_DB || undefined });
+  console.log('Connected to MongoDB');
 
-start(); // Start server (operational time tracking removed)
+  // ✅ Secure: seed with hashed password
+  const username = process.env.SEED_USERNAME || 'test';
+  const password = process.env.SEED_PASSWORD || 'password';
+  const name = process.env.SEED_NAME || 'Test User';
+  const existing = await User.findOne({ username }).exec();
+  if (existing) {
+    const looksHashed =
+      typeof existing.password === 'string' && existing.password.startsWith('$2');
+    if (!looksHashed) {
+      const hashed = await bcrypt.hash(password, 12);
+      existing.password = hashed;
+      await existing.save();
+      console.log('Upgraded default user password to bcrypt hash');
+    }
+  } else {
+    const hashed = await bcrypt.hash(password, 12);
+    await User.create({ username, password: hashed, name });
+    console.log('Seeded default user (hashed password):', username);
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+  });
+
+  const shutdown = async () => {
+    try {
+      await mongoose.disconnect();
+      if (mem) await mem.stop(); // stop in-memory DB if used
+      await new Promise((resolve) => server.close(resolve));
+    } finally {
+      process.exit(0);
+    }
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+} catch (err) {
+  console.error('Failed to start server', err);
+  process.exit(1);
+}
