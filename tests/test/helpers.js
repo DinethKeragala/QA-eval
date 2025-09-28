@@ -31,27 +31,9 @@ async function waitForApi(healthUrl = 'http://localhost:4000/health', attempts =
   return false;
 }
 
-async function resolveBaseUrl(initial) {
-  // Try the provided URL first
-  try {
-    const res = await fetch(initial, { method: 'GET' });
-    if (res.ok) return initial;
-  } catch (_) { /* fallthrough */ }
-  // If it's the default 5173 and failed, try 5174 (Vite fallback)
-  if (initial.includes('5173')) {
-    const alt = initial.replace('5173', '5174');
-    try {
-      const res = await fetch(alt, { method: 'GET' });
-      if (res.ok) return alt;
-    } catch (_) { /* ignore */ }
-  }
-  return initial; // fallback to original even if not verified
-}
-
+// Removed resolveBaseUrl – we now assume BASE_URL is correct
 async function loginDefault(driver, { baseUrl = BASE_URL, username = 'test', password = 'password' } = {}) {
-  // Ensure API is up before attempting UI login to reduce flakiness
   await waitForApi();
-  baseUrl = await resolveBaseUrl(baseUrl);
   await driver.get(baseUrl);
   const usernameEl = await waitForTestId(driver, 'username');
   const passwordEl = await waitForTestId(driver, 'password');
@@ -78,5 +60,4 @@ module.exports = {
   loginDefault,
   randomHex,
   waitForApi,
-  resolveBaseUrl,
 };
