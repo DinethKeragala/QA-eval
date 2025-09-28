@@ -1,6 +1,6 @@
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const { randomBytes } = require('crypto');
+const { randomBytes } = require('node:crypto');
 
 async function buildDriver() {
   const options = new chrome.Options()

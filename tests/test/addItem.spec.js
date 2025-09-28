@@ -1,4 +1,4 @@
-const { strict: assert } = require('assert');
+const { strict: assert } = require('node:assert');
 const { By } = require('selenium-webdriver');
 const { buildDriver, loginDefault, waitForTestId, randomHex, BASE_URL } = require('./helpers');
 

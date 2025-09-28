@@ -1,4 +1,4 @@
-const { strict: assert } = require('assert');
+const { strict: assert } = require('node:assert');
 const { buildDriver, loginDefault, BASE_URL } = require('./helpers');
 
 describe('UI: Login flow', function() {
