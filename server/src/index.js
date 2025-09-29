@@ -102,8 +102,6 @@ app.post('/api/auth/login', async (req, res) => {
     // FIX: Require both fields to prevent empty-password logins
     if (!usernameStr || !passwordStr) return res.status(400).json({ error: 'Username and password required' });
 
-    // ✅ Secure: find by username, verify with bcrypt
-  // Use $eq with validated string to avoid interpreting objects/operators from user input
   const user = await User.findOne({ username: { $eq: usernameStr } }).exec();
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -219,3 +217,5 @@ try {
   console.error('Failed to start server', err);
   process.exit(1);
 }
+
+//
