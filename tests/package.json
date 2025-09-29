@@ -1,12 +1,13 @@
 {
   "name": "qa-eval-tests",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "test": "mocha --timeout 60000 \"test/**/*.spec.js\""
   },
   "dependencies": {
+    "expect": "^29.7.0",
     "mocha": "^10.7.3",
-    "selenium-webdriver": "^4.24.1",
-    "expect": "^29.7.0"
+    "selenium-webdriver": "^4.24.1"
   }
 }

@@ -34,4 +34,6 @@ jobs:
         uses: browser-actions/setup-chrome@v1
 
       - name: Run UI tests (Selenium)
+        env:
+          USE_IN_MEMORY_DB: 'true'
         run: npm test

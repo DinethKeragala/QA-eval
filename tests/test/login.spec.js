@@ -1,23 +1,43 @@
-const { strict: assert } = require('node:assert');
-const { buildDriver, loginDefault, BASE_URL } = require('./helpers');
+import { Builder, By, until } from 'selenium-webdriver';
+import { expect } from 'expect';
+import chrome from 'selenium-webdriver/chrome.js';
 
-describe('UI: Login flow', function() {
-  this.timeout(60000);
+describe('Login UI Test', function () {
+  this.timeout(40000);
+  /** @type {import('selenium-webdriver').WebDriver} */
   let driver;
 
   before(async () => {
-    driver = await buildDriver();
+    const options = new chrome.Options()
+      .addArguments(
+        '--headless=new',
+        '--disable-gpu',
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--window-size=1280,1024'
+      );
+    driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
   });
 
   after(async () => {
     if (driver) await driver.quit();
   });
 
-  it('logs in with default creds and lands on dashboard', async () => {
-    const list = await loginDefault(driver, { baseUrl: BASE_URL });
-    // Double-check navigation + list element to reduce flakes
-    const url = await driver.getCurrentUrl();
-    assert.ok(url.includes('/app'), 'Should navigate to /app');
-    assert.ok(list, 'Items list should be present');
+  it('should log in with valid credentials', async () => {
+    await driver.get('http://localhost:5173/');
+
+    // Find and interact with the username and password fields
+    await driver.findElement(By.id('login-username')).clear();
+    await driver.findElement(By.id('login-username')).sendKeys('test');
+    await driver.findElement(By.id('login-password')).clear();
+    await driver.findElement(By.id('login-password')).sendKeys('password');
+
+    // Click on the login button
+    await driver.findElement(By.css('[data-testid="login-btn"]')).click();
+
+  // Wait for the dashboard to load (look for an element unique to it)
+  await driver.wait(until.elementLocated(By.css('[data-testid="item-input"]')), 20000);
+  const currentUrl = await driver.getCurrentUrl();
+  expect(currentUrl).toContain('/app');
   });
 });
