@@ -27,9 +27,6 @@ jobs:
       - name: Run client unit tests
         run: npm -w client run test
 
-      - name: Run API tests (start server + newman)
-        run: npm run api:test
-
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
 

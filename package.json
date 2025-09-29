@@ -15,8 +15,10 @@
   "test": "cross-env USE_IN_MEMORY_DB=true CLIENT_URL=http://localhost:5173 start-server-and-test start http://localhost:5173 \"npm -w tests test\"",
   "test:selenium": "cross-env USE_IN_MEMORY_DB=true CLIENT_URL=http://localhost:5173 start-server-and-test start http://localhost:5173 \"npm run selenium:test\"",
   "selenium:test": "mocha tests/**/*.spec.js --timeout 10000",
-  "api:test:local": "newman run ./postman/express-task-api-tests.postman_collection.json",
-  "api:test": "start-server-and-test start:server http://localhost:4000/health \"npm run api:test:local\""
+  "api:smoke:local": "node ./scripts/smoke-api.mjs",
+  "api:smoke": "cross-env USE_IN_MEMORY_DB=true start-server-and-test start:server http://localhost:4000/health \"npm run api:smoke:local\"",
+  "api:test:local": "node ./scripts/run-newman.cjs ./postman/express-task-api-tests.postman_collection.json",
+  "api:test": "cross-env USE_IN_MEMORY_DB=true start-server-and-test start:server http://localhost:4000/health \"npm run api:test:local\""
 }
   ,
   "devDependencies": {
