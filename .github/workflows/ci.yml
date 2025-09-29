@@ -49,3 +49,4 @@ jobs:
         env:
           USE_IN_MEMORY_DB: 'true'
         run: npm test
+
