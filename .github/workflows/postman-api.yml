@@ -1,14 +1,15 @@
-name: CI
+name: Automated API tests (Postman CLI)
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
+  automated-api-tests:
     runs-on: ubuntu-latest
+    env:
+      USE_IN_MEMORY_DB: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,14 +19,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies (root workspaces)
+      - name: Install dependencies
         run: npm ci
-
-      - name: Build client
-        run: npm -w client run build
-
-      - name: Run client unit tests
-        run: npm -w client run test
 
       - name: Install Postman CLI
         run: |
@@ -36,16 +31,6 @@ jobs:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
         run: postman login --with-api-key "$POSTMAN_API_KEY"
 
-      - name: Run API tests (Postman CLI)
-        env:
-          USE_IN_MEMORY_DB: 'true'
+      - name: Start API and run Postman collection
         run: |
           npx --yes start-server-and-test "npm run start:server" http://localhost:4000/health "postman collection run \"48531495-5fe3c9d7-ff9e-4df6-af37-eff15db983d0\" -e \"48531495-2e3dac5d-7414-4ff2-a5a6-026829684c41\""
-
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Run UI tests (Selenium)
-        env:
-          USE_IN_MEMORY_DB: 'true'
-        run: npm test
